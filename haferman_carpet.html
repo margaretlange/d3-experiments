@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+   <meta http-equiv="Content-Type" content="text/html;charset=utf-8">
+   <title>My project</title>
+   <script type="text/javascript" src="../d3/d3.js"></script>
+   </head>
+
+  <body>
+
+<!-- load the d3.js library --> 
+<script>
+
+//blah. not sure how javascript does copying or not
+//maggie_child is behaving like a global variable 
+
+//described here
+//http://mathworld.wolfram.com/HafermanCarpet.html
+var makeFractal = function(fractal, depth, max_depth, color_type, row, col){
+    var num_rows = 3
+    var num_cols = 3
+    var zeros = ["1, 1", "1, 3", "2, 2", "3, 1", "3, 3"]
+    var ones = ["1, 2", "2, 1", "2, 3", "3, 2"]
+    if (depth == max_depth){
+        fractal.color = color_type
+        fractal.row = row
+        fractal.col = col
+    }
+    else{
+        fractal.color = color_type
+        fractal.row = row
+        fractal.col = col
+        fractal.children = []
+        for (var i = 0; i < num_rows; i++) {
+          for (var j = 0; j < num_cols; j++){
+              var my_row = i + 1
+              var my_col = j + 1
+              str_id = my_row + ", " + my_col
+              if(color_type == 0){
+                var maggie_child = {}
+                makeFractal(maggie_child, depth+1, max_depth, 1, my_row, my_col) 
+                fractal.children.push(maggie_child)
+              } else {
+                if (zeros.includes(str_id)){
+                    var maggie_child = {}
+                    makeFractal(maggie_child, depth + 1, max_depth, 0, my_row, my_col)
+                    fractal.children.push(maggie_child)                    
+                } else {
+                    var maggie_child = {}
+                    makeFractal(maggie_child, depth + 1, max_depth, 1, my_row, my_col)
+                    fractal.children.push(maggie_child)           
+                }            
+              }                      
+            }
+          }
+        }
+      }
+
+my_fractal = {}
+//console.log("hello")
+//console.log(my_fractal)
+makeFractal(my_fractal, 0, 5, 1, 1, 1)
+console.log(my_fractal)
+
+my_fractal_node = d3.hierarchy(my_fractal)
+console.log(my_fractal_node)
+
+console.log(d3.version)
+
+//but i have to step through and add x, y, width, height?
+//no need for transformations right now
+//I will want to draw node.leaves
+//which one do I want
+
+fractal_width = 500
+fractal_height = 500
+
+//the eachBefore function applies whatever function it has as an argument down the tree! 
+
+my_fractal_node.eachBefore(function(my_node){
+  if (my_node.parent){
+     my_node.data.width = (my_node.parent.data.width)/3
+     my_node.data.height = (my_node.parent.data.height)/3
+     var parent_x = my_node.parent.data.x
+     var parent_y = my_node.parent.data.y
+     var shift_x = ((my_node.data.col - 1) % 3) * my_node.data.width
+     var shift_y = ((my_node.data.row - 1) % 3) * my_node.data.height
+     my_node.data.x = parent_x + shift_x
+     my_node.data.y = parent_y + shift_y
+  } else {
+      my_node.data.width = fractal_width
+      my_node.data.height = fractal_height 
+      my_node.data.x = 0
+      my_node.data.y = 0
+  }
+})
+
+//console.log(my_fractal_node)
+leaves = my_fractal_node.leaves()
+console.log(leaves)
+
+svg = d3.select("body").append("svg")
+  .attr("width", 1000)
+  .attr("height", 1000)
+
+svg.selectAll("rect").data(leaves).enter().append("rect")
+.attr("fill", function(d){if (d.data.color == 1){
+                            return "#B03060"
+                          } else {
+                            return "white"
+                          }
+                        })
+.attr("height", function(d){return d.data.height})
+.attr("width", function(d){return d.data.width})
+.attr("x", function(d){return d.data.x})
+.attr("y", function(d){return d.data.y})
+
+//svg.selectAll("rect").data(leaves).enter().append("rect")
+//.attr("fill", "white")
+//.attr("stroke", function(d){if(d.data.color == "black"){ 
+                          //  return "purple" 
+                          // } else {
+                          //  return ""
+                          //}})
+//.attr("stroke-width", function(d){if(d.data.color == "black"){
+                                  //  return 2
+                                  //} else {
+                                  //  return 0
+                                  //}})
+//.attr("height", function(d){return d.data.height})
+//.attr("width", function(d){return d.data.width})
+//.attr("x", function(d){return d.data.x})
+//.attr("y", function(d){return d.data.y})
+
+
+</script>
+
+
+
+</body>
+</html>
